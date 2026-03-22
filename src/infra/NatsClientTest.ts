@@ -1,5 +1,4 @@
 import { Effect, Layer, Ref } from "effect";
-import { NatsClient } from "../domain/NatsClient.ts";
 import { KvNotFoundError, NatsError } from "../domain/errors.ts";
 import {
   ConsumerInfo,
@@ -9,6 +8,7 @@ import {
   ServerInfo,
   StreamInfo,
 } from "../domain/models.ts";
+import { NatsClient } from "../domain/NatsClient.ts";
 
 type KvStore = Map<string, { value: string; revision: number }>;
 type KvHistory = Map<string, KvEntry[]>;
@@ -18,9 +18,7 @@ export const NatsClientTest = Layer.effect(
   Effect.gen(function* () {
     // Streams
     const streamsRef = yield* Ref.make<Map<string, StreamInfo>>(new Map());
-    const streamMessagesRef = yield* Ref.make<Map<string, NatsMessage[]>>(
-      new Map(),
-    );
+    const streamMessagesRef = yield* Ref.make<Map<string, NatsMessage[]>>(new Map());
     const consumersRef = yield* Ref.make<Map<string, ConsumerInfo>>(new Map());
 
     // KV
@@ -32,9 +30,7 @@ export const NatsClientTest = Layer.effect(
         const buckets = yield* Ref.get(kvBucketsRef);
         const store = buckets.get(bucket);
         if (!store) {
-          return yield* Effect.fail(
-            new NatsError({ message: `Bucket ${bucket} not found` }),
-          );
+          return yield* Effect.fail(new NatsError({ message: `Bucket ${bucket} not found` }));
         }
         return store;
       });
@@ -49,17 +45,14 @@ export const NatsClientTest = Layer.effect(
       request: (subject, payload, _timeoutMs) =>
         Effect.succeed(new NatsMessage({ subject, payload })),
 
-      streamList: () =>
-        Ref.get(streamsRef).pipe(Effect.map((m) => [...m.values()])),
+      streamList: () => Ref.get(streamsRef).pipe(Effect.map((m) => [...m.values()])),
 
       streamInfo: (name) =>
         Effect.gen(function* () {
           const m = yield* Ref.get(streamsRef);
           const info = m.get(name);
           if (!info) {
-            return yield* Effect.fail(
-              new NatsError({ message: `Stream ${name} not found` }),
-            );
+            return yield* Effect.fail(new NatsError({ message: `Stream ${name} not found` }));
           }
           return info;
         }),
@@ -72,12 +65,8 @@ export const NatsClientTest = Layer.effect(
             numMessages: 0,
             numBytes: 0,
           });
-          yield* Ref.update(streamsRef, (m) =>
-            new Map(m).set(config.name, info),
-          );
-          yield* Ref.update(streamMessagesRef, (m) =>
-            new Map(m).set(config.name, []),
-          );
+          yield* Ref.update(streamsRef, (m) => new Map(m).set(config.name, info));
+          yield* Ref.update(streamMessagesRef, (m) => new Map(m).set(config.name, []));
           return info;
         }),
 
@@ -101,11 +90,7 @@ export const NatsClientTest = Layer.effect(
           let targetStream: string | undefined;
           for (const [name, info] of m) {
             const subjects = [...info.subjects];
-            if (
-              subjects.some(
-                (s) => s === subject || s.endsWith(">") || s.includes("*"),
-              )
-            ) {
+            if (subjects.some((s) => s === subject || s.endsWith(">") || s.includes("*"))) {
               targetStream = name;
               break;
             }
@@ -162,8 +147,7 @@ export const NatsClientTest = Layer.effect(
           });
         }),
 
-      kvListBuckets: () =>
-        Ref.get(kvBucketsRef).pipe(Effect.map((m) => [...m.keys()])),
+      kvListBuckets: () => Ref.get(kvBucketsRef).pipe(Effect.map((m) => [...m.keys()])),
 
       kvGet: (bucket, key) =>
         Effect.gen(function* () {
@@ -182,8 +166,7 @@ export const NatsClientTest = Layer.effect(
             const next = new Map(buckets);
             const existing = next.get(bucket);
             const store = new Map(
-              existing ??
-                new Map<string, { value: string; revision: number }>(),
+              existing ?? new Map<string, { value: string; revision: number }>(),
             );
             const prev = store.get(key);
             const revision = (prev?.revision ?? 0) + 1;
@@ -195,9 +178,7 @@ export const NatsClientTest = Layer.effect(
           const revision = buckets.get(bucket)?.get(key)?.revision ?? 1;
           yield* Ref.update(kvHistoriesRef, (histories) => {
             const next = new Map(histories);
-            const history = new Map(
-              next.get(bucket) ?? new Map<string, KvEntry[]>(),
-            );
+            const history = new Map(next.get(bucket) ?? new Map<string, KvEntry[]>());
             const existing = history.get(key) ?? [];
             history.set(key, [
               ...existing,
@@ -215,8 +196,7 @@ export const NatsClientTest = Layer.effect(
             const next = new Map(buckets);
             const existing = next.get(bucket);
             const store = new Map(
-              existing ??
-                new Map<string, { value: string; revision: number }>(),
+              existing ?? new Map<string, { value: string; revision: number }>(),
             );
             store.delete(key);
             next.set(bucket, store);
@@ -235,9 +215,7 @@ export const NatsClientTest = Layer.effect(
           const histories = yield* Ref.get(kvHistoriesRef);
           const bucketHistory = histories.get(bucket);
           if (!bucketHistory) {
-            return yield* Effect.fail(
-              new NatsError({ message: `Bucket ${bucket} not found` }),
-            );
+            return yield* Effect.fail(new NatsError({ message: `Bucket ${bucket} not found` }));
           }
           return bucketHistory.get(key) ?? [];
         }),

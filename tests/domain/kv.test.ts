@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { Effect } from "effect";
-import { NatsClient } from "../../src/domain/NatsClient.ts";
 import { KvNotFoundError } from "../../src/domain/errors.ts";
+import { NatsClient } from "../../src/domain/NatsClient.ts";
 import { NatsClientTest } from "../../src/infra/NatsClientTest.ts";
 
 describe("kv", () => {

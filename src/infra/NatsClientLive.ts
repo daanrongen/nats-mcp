@@ -1,6 +1,7 @@
 import { Effect, Layer } from "effect";
 import {
   AckPolicy,
+  connect,
   DeliverPolicy,
   type JetStreamClient,
   type KV,
@@ -9,10 +10,8 @@ import {
   type StreamConfig as NatsStreamConfig,
   ReplayPolicy,
   StringCodec,
-  connect,
 } from "nats";
 import { NatsConfig } from "../config.ts";
-import { NatsClient } from "../domain/NatsClient.ts";
 import { KvNotFoundError, NatsError } from "../domain/errors.ts";
 import {
   ConsumerInfo,
@@ -22,22 +21,17 @@ import {
   ServerInfo,
   StreamInfo,
 } from "../domain/models.ts";
+import { NatsClient } from "../domain/NatsClient.ts";
 
 const sc = StringCodec();
 
-const wrapNats = <A>(
-  label: string,
-  fn: () => Promise<A>,
-): Effect.Effect<A, NatsError> =>
+const wrapNats = <A>(label: string, fn: () => Promise<A>): Effect.Effect<A, NatsError> =>
   Effect.tryPromise({
     try: fn,
     catch: (e) => new NatsError({ message: `${label} failed`, cause: e }),
   });
 
-const getKv = (
-  js: JetStreamClient,
-  bucket: string,
-): Effect.Effect<KV, NatsError> =>
+const getKv = (js: JetStreamClient, bucket: string): Effect.Effect<KV, NatsError> =>
   wrapNats(`kvGet bucket=${bucket}`, () => js.views.kv(bucket));
 
 export const NatsClientLive = Layer.scoped(
@@ -141,49 +135,43 @@ export const NatsClientLive = Layer.scoped(
         }),
 
       streamFetch: (stream, consumer, count) =>
-        wrapNats(
-          `streamFetch stream=${stream} consumer=${consumer}`,
-          async () => {
-            const c = await js.consumers.get(stream, consumer);
-            const msgs: NatsMessage[] = [];
-            const iter = await c.fetch({ max_messages: count });
-            for await (const msg of iter) {
-              msgs.push(
-                new NatsMessage({
-                  subject: msg.subject,
-                  payload: sc.decode(msg.data),
-                }),
-              );
-              msg.ack();
-            }
-            return msgs;
-          },
-        ),
+        wrapNats(`streamFetch stream=${stream} consumer=${consumer}`, async () => {
+          const c = await js.consumers.get(stream, consumer);
+          const msgs: NatsMessage[] = [];
+          const iter = await c.fetch({ max_messages: count });
+          for await (const msg of iter) {
+            msgs.push(
+              new NatsMessage({
+                subject: msg.subject,
+                payload: sc.decode(msg.data),
+              }),
+            );
+            msg.ack();
+          }
+          return msgs;
+        }),
 
       streamConsumerCreate: (stream, config) =>
-        wrapNats(
-          `streamConsumerCreate stream=${stream} name=${config.name}`,
-          async () => {
-            const jsm = await conn.jetstreamManager();
-            const consumerCfg: NatsConsumerConfig = {
-              name: config.name,
-              durable_name: config.name,
-              ack_policy: AckPolicy.Explicit,
-              deliver_policy: DeliverPolicy.All,
-              replay_policy: ReplayPolicy.Instant,
-            };
-            if (config.filterSubject !== undefined) {
-              consumerCfg.filter_subject = config.filterSubject;
-            }
-            const info = await jsm.consumers.add(stream, consumerCfg);
-            return new ConsumerInfo({
-              name: info.name,
-              streamName: info.stream_name,
-              numPending: info.num_pending,
-              numAckPending: info.num_ack_pending,
-            });
-          },
-        ),
+        wrapNats(`streamConsumerCreate stream=${stream} name=${config.name}`, async () => {
+          const jsm = await conn.jetstreamManager();
+          const consumerCfg: NatsConsumerConfig = {
+            name: config.name,
+            durable_name: config.name,
+            ack_policy: AckPolicy.Explicit,
+            deliver_policy: DeliverPolicy.All,
+            replay_policy: ReplayPolicy.Instant,
+          };
+          if (config.filterSubject !== undefined) {
+            consumerCfg.filter_subject = config.filterSubject;
+          }
+          const info = await jsm.consumers.add(stream, consumerCfg);
+          return new ConsumerInfo({
+            name: info.name,
+            streamName: info.stream_name,
+            numPending: info.num_pending,
+            numAckPending: info.num_ack_pending,
+          });
+        }),
 
       kvCreateBucket: (bucket) =>
         wrapNats(`kvCreateBucket bucket=${bucket}`, async () => {
@@ -207,10 +195,7 @@ export const NatsClientLive = Layer.scoped(
       kvGet: (bucket, key) =>
         Effect.gen(function* () {
           const kv = yield* getKv(js, bucket);
-          const entry = yield* wrapNats(
-            `kvGet bucket=${bucket} key=${key}`,
-            () => kv.get(key),
-          );
+          const entry = yield* wrapNats(`kvGet bucket=${bucket} key=${key}`, () => kv.get(key));
           if (entry === null) {
             return yield* Effect.fail(new KvNotFoundError({ bucket, key }));
           }
@@ -220,17 +205,13 @@ export const NatsClientLive = Layer.scoped(
       kvPut: (bucket, key, value) =>
         Effect.gen(function* () {
           const kv = yield* getKv(js, bucket);
-          yield* wrapNats(`kvPut bucket=${bucket} key=${key}`, () =>
-            kv.put(key, sc.encode(value)),
-          );
+          yield* wrapNats(`kvPut bucket=${bucket} key=${key}`, () => kv.put(key, sc.encode(value)));
         }),
 
       kvDelete: (bucket, key) =>
         Effect.gen(function* () {
           const kv = yield* getKv(js, bucket);
-          yield* wrapNats(`kvDelete bucket=${bucket} key=${key}`, () =>
-            kv.delete(key),
-          );
+          yield* wrapNats(`kvDelete bucket=${bucket} key=${key}`, () => kv.delete(key));
         }),
 
       kvListKeys: (bucket) =>
@@ -249,25 +230,22 @@ export const NatsClientLive = Layer.scoped(
       kvHistory: (bucket, key) =>
         Effect.gen(function* () {
           const kv = yield* getKv(js, bucket);
-          return yield* wrapNats(
-            `kvHistory bucket=${bucket} key=${key}`,
-            async () => {
-              const history: KvEntry[] = [];
-              const iter = await kv.history({ key });
-              for await (const entry of iter) {
-                history.push(
-                  new KvEntry({
-                    bucket,
-                    key: entry.key,
-                    value: sc.decode(entry.value),
-                    revision: entry.revision,
-                    operation: entry.operation,
-                  }),
-                );
-              }
-              return history;
-            },
-          );
+          return yield* wrapNats(`kvHistory bucket=${bucket} key=${key}`, async () => {
+            const history: KvEntry[] = [];
+            const iter = await kv.history({ key });
+            for await (const entry of iter) {
+              history.push(
+                new KvEntry({
+                  bucket,
+                  key: entry.key,
+                  value: sc.decode(entry.value),
+                  revision: entry.revision,
+                  operation: entry.operation,
+                }),
+              );
+            }
+            return history;
+          });
         }),
 
       serverInfo: () =>

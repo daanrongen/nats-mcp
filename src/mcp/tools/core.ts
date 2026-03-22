@@ -2,8 +2,8 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { ManagedRuntime } from "effect";
 import { Effect } from "effect";
 import { z } from "zod";
-import { NatsClient } from "../../domain/NatsClient.ts";
 import type { NatsError } from "../../domain/errors.ts";
+import { NatsClient } from "../../domain/NatsClient.ts";
 import { formatError, formatSuccess } from "../utils.ts";
 
 export const registerCoreTools = (
@@ -44,10 +44,7 @@ export const registerCoreTools = (
     {
       subject: z.string().describe("The NATS subject to send the request to"),
       payload: z.string().describe("The request payload as a string"),
-      timeoutMs: z
-        .number()
-        .optional()
-        .describe("Timeout in milliseconds (default: 5000)"),
+      timeoutMs: z.number().optional().describe("Timeout in milliseconds (default: 5000)"),
     },
     {
       title: "NATS Request/Reply",

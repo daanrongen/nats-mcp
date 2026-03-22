@@ -10,8 +10,6 @@ export class KvNotFoundError extends Data.TaggedError("KvNotFoundError")<{
   readonly key: string;
 }> {}
 
-export class StreamNotFoundError extends Data.TaggedError(
-  "StreamNotFoundError",
-)<{
+export class StreamNotFoundError extends Data.TaggedError("StreamNotFoundError")<{
   readonly name: string;
 }> {}

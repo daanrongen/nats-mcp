@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { ManagedRuntime } from "effect";
-import type { NatsClient } from "../domain/NatsClient.ts";
 import type { NatsError } from "../domain/errors.ts";
+import type { NatsClient } from "../domain/NatsClient.ts";
 import { registerCoreTools } from "./tools/core.ts";
 import { registerKvTools } from "./tools/kv.ts";
 import { registerServerTools } from "./tools/server.ts";

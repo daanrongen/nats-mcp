@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { Effect } from "effect";
-import { NatsClient } from "../../src/domain/NatsClient.ts";
 import { StreamConfig } from "../../src/domain/models.ts";
+import { NatsClient } from "../../src/domain/NatsClient.ts";
 import { NatsClientTest } from "../../src/infra/NatsClientTest.ts";
 
 describe("streams", () => {
@@ -25,12 +25,8 @@ describe("streams", () => {
     const streams = await Effect.runPromise(
       Effect.gen(function* () {
         const client = yield* NatsClient;
-        yield* client.streamCreate(
-          new StreamConfig({ name: "S1", subjects: ["s1.>"] }),
-        );
-        yield* client.streamCreate(
-          new StreamConfig({ name: "S2", subjects: ["s2.>"] }),
-        );
+        yield* client.streamCreate(new StreamConfig({ name: "S1", subjects: ["s1.>"] }));
+        yield* client.streamCreate(new StreamConfig({ name: "S2", subjects: ["s2.>"] }));
         return yield* client.streamList();
       }).pipe(Effect.provide(NatsClientTest)),
     );
@@ -43,9 +39,7 @@ describe("streams", () => {
     const messages = await Effect.runPromise(
       Effect.gen(function* () {
         const client = yield* NatsClient;
-        yield* client.streamCreate(
-          new StreamConfig({ name: "EVENTS", subjects: ["events.>"] }),
-        );
+        yield* client.streamCreate(new StreamConfig({ name: "EVENTS", subjects: ["events.>"] }));
         yield* client.streamConsumerCreate("EVENTS", {
           name: "my-consumer",
         } as import("../../src/domain/models.ts").ConsumerConfig);
@@ -63,9 +57,7 @@ describe("streams", () => {
     const streams = await Effect.runPromise(
       Effect.gen(function* () {
         const client = yield* NatsClient;
-        yield* client.streamCreate(
-          new StreamConfig({ name: "TEMP", subjects: ["temp.>"] }),
-        );
+        yield* client.streamCreate(new StreamConfig({ name: "TEMP", subjects: ["temp.>"] }));
         yield* client.streamDelete("TEMP");
         return yield* client.streamList();
       }).pipe(Effect.provide(NatsClientTest)),
@@ -77,9 +69,7 @@ describe("streams", () => {
     const info = await Effect.runPromise(
       Effect.gen(function* () {
         const client = yield* NatsClient;
-        yield* client.streamCreate(
-          new StreamConfig({ name: "WORK", subjects: ["work.>"] }),
-        );
+        yield* client.streamCreate(new StreamConfig({ name: "WORK", subjects: ["work.>"] }));
         return yield* client.streamConsumerCreate("WORK", {
           name: "worker-1",
           filterSubject: "work.tasks",
@@ -94,9 +84,7 @@ describe("streams", () => {
     const result = await Effect.runPromise(
       Effect.gen(function* () {
         const client = yield* NatsClient;
-        return yield* Effect.either(
-          client.streamPublish("unmatched.subject", "data"),
-        );
+        return yield* Effect.either(client.streamPublish("unmatched.subject", "data"));
       }).pipe(Effect.provide(NatsClientTest)),
     );
     expect(result._tag).toBe("Left");

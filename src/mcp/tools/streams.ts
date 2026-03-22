@@ -2,9 +2,9 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { ManagedRuntime } from "effect";
 import { Effect } from "effect";
 import { z } from "zod";
-import { NatsClient } from "../../domain/NatsClient.ts";
 import type { NatsError } from "../../domain/errors.ts";
 import { StreamConfig } from "../../domain/models.ts";
+import { NatsClient } from "../../domain/NatsClient.ts";
 import { formatError, formatSuccess } from "../utils.ts";
 
 export const registerStreamTools = (
@@ -65,15 +65,9 @@ export const registerStreamTools = (
     {
       name: z.string().describe("Stream name"),
       subjects: z.array(z.string()).describe("Subjects to bind to the stream"),
-      maxMessages: z
-        .number()
-        .optional()
-        .describe("Maximum number of messages to retain"),
+      maxMessages: z.number().optional().describe("Maximum number of messages to retain"),
       maxBytes: z.number().optional().describe("Maximum bytes to retain"),
-      maxAge: z
-        .number()
-        .optional()
-        .describe("Maximum age of messages in nanoseconds"),
+      maxAge: z.number().optional().describe("Maximum age of messages in nanoseconds"),
     },
     {
       title: "Create JetStream Stream",
@@ -158,11 +152,7 @@ export const registerStreamTools = (
     {
       stream: z.string().describe("Stream name"),
       consumer: z.string().describe("Consumer name"),
-      count: z
-        .number()
-        .int()
-        .positive()
-        .describe("Number of messages to fetch"),
+      count: z.number().int().positive().describe("Number of messages to fetch"),
     },
     {
       title: "Fetch from JetStream Consumer",
@@ -190,14 +180,8 @@ export const registerStreamTools = (
       stream: z.string().describe("Stream name"),
       name: z.string().describe("Consumer name"),
       filterSubject: z.string().optional().describe("Optional subject filter"),
-      deliverPolicy: z
-        .string()
-        .optional()
-        .describe("Delivery policy (e.g. 'all', 'last', 'new')"),
-      ackPolicy: z
-        .string()
-        .optional()
-        .describe("Acknowledgment policy (e.g. 'explicit', 'none')"),
+      deliverPolicy: z.string().optional().describe("Delivery policy (e.g. 'all', 'last', 'new')"),
+      ackPolicy: z.string().optional().describe("Acknowledgment policy (e.g. 'explicit', 'none')"),
     },
     {
       title: "Create JetStream Consumer",

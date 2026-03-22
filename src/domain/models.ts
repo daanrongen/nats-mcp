@@ -3,9 +3,7 @@ import { Schema } from "effect";
 export class NatsMessage extends Schema.Class<NatsMessage>("NatsMessage")({
   subject: Schema.String,
   payload: Schema.String,
-  headers: Schema.optional(
-    Schema.Record({ key: Schema.String, value: Schema.String }),
-  ),
+  headers: Schema.optional(Schema.Record({ key: Schema.String, value: Schema.String })),
 }) {}
 
 export class StreamConfig extends Schema.Class<StreamConfig>("StreamConfig")({
@@ -29,9 +27,7 @@ export class PublishAck extends Schema.Class<PublishAck>("PublishAck")({
   duplicate: Schema.Boolean,
 }) {}
 
-export class ConsumerConfig extends Schema.Class<ConsumerConfig>(
-  "ConsumerConfig",
-)({
+export class ConsumerConfig extends Schema.Class<ConsumerConfig>("ConsumerConfig")({
   name: Schema.String,
   filterSubject: Schema.optional(Schema.String),
   deliverPolicy: Schema.optional(Schema.String),
