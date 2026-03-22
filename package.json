@@ -1,10 +1,10 @@
 {
-  "name": "nats-mcp-server",
+  "name": "@daanrongen/nats-mcp",
   "version": "1.0.1",
   "description": "MCP server for NATS — publish, request-reply, JetStream streams, KV store, and server diagnostics over stdio",
   "type": "module",
   "bin": {
-    "nats-mcp-server": "./dist/main.js"
+    "nats-mcp": "./dist/main.js"
   },
   "main": "./dist/main.js",
   "files": ["dist"],
