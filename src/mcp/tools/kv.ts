@@ -11,7 +11,7 @@ export const registerKvTools = (
   runtime: ManagedRuntime.ManagedRuntime<NatsClient, NatsError>,
 ) => {
   server.tool(
-    "nats_kv_create_bucket",
+    "kv_create_bucket",
     "Create a KV bucket in NATS JetStream. Returns { ok: true } on success.",
     {
       bucket: z.string().describe("Bucket name"),
@@ -36,7 +36,7 @@ export const registerKvTools = (
   );
 
   server.tool(
-    "nats_kv_list_buckets",
+    "kv_list_buckets",
     "List all KV buckets. Returns string[] of bucket names.",
     {},
     {
@@ -59,7 +59,7 @@ export const registerKvTools = (
   );
 
   server.tool(
-    "nats_kv_get",
+    "kv_get",
     "Get a value from a KV bucket by key. Returns the value string.",
     {
       bucket: z.string().describe("Bucket name"),
@@ -85,7 +85,7 @@ export const registerKvTools = (
   );
 
   server.tool(
-    "nats_kv_put",
+    "kv_put",
     "Put a value into a KV bucket. Returns { ok: true } on success.",
     {
       bucket: z.string().describe("Bucket name"),
@@ -112,7 +112,7 @@ export const registerKvTools = (
   );
 
   server.tool(
-    "nats_kv_delete",
+    "kv_delete",
     "Delete a key from a KV bucket. Returns { ok: true } on success.",
     {
       bucket: z.string().describe("Bucket name"),
@@ -138,7 +138,7 @@ export const registerKvTools = (
   );
 
   server.tool(
-    "nats_kv_list_keys",
+    "kv_list_keys",
     "List all keys in a KV bucket. Returns string[] of keys.",
     {
       bucket: z.string().describe("Bucket name"),
@@ -163,7 +163,7 @@ export const registerKvTools = (
   );
 
   server.tool(
-    "nats_kv_history",
+    "kv_history",
     "Get the revision history for a key in a KV bucket. Returns KvEntry[] { bucket, key, value, revision, operation }.",
     {
       bucket: z.string().describe("Bucket name"),

@@ -10,7 +10,7 @@ export const registerServerTools = (
   runtime: ManagedRuntime.ManagedRuntime<NatsClient, NatsError>,
 ) => {
   server.tool(
-    "nats_server_info",
+    "server_info",
     "Get information about the connected NATS server. Returns ServerInfo { serverId, version, host, port, maxPayload }.",
     {},
     {

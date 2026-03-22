@@ -12,7 +12,7 @@ export const registerStreamTools = (
   runtime: ManagedRuntime.ManagedRuntime<NatsClient, NatsError>,
 ) => {
   server.tool(
-    "nats_stream_list",
+    "stream_list",
     "List all JetStream streams. Returns StreamInfo[] { name, subjects, numMessages, numBytes }.",
     {},
     {
@@ -35,7 +35,7 @@ export const registerStreamTools = (
   );
 
   server.tool(
-    "nats_stream_info",
+    "stream_info",
     "Get info about a specific JetStream stream. Returns StreamInfo { name, subjects, numMessages, numBytes }.",
     {
       name: z.string().describe("Stream name"),
@@ -60,7 +60,7 @@ export const registerStreamTools = (
   );
 
   server.tool(
-    "nats_stream_create",
+    "stream_create",
     "Create a new JetStream stream. Returns StreamInfo { name, subjects, numMessages, numBytes }.",
     {
       name: z.string().describe("Stream name"),
@@ -102,7 +102,7 @@ export const registerStreamTools = (
   );
 
   server.tool(
-    "nats_stream_delete",
+    "stream_delete",
     "Delete a JetStream stream and all its messages. Returns { ok: true } on success.",
     {
       name: z.string().describe("Stream name to delete"),
@@ -127,7 +127,7 @@ export const registerStreamTools = (
   );
 
   server.tool(
-    "nats_stream_publish",
+    "stream_publish",
     "Publish a message to a JetStream stream. Returns PublishAck { stream, seq, duplicate }.",
     {
       subject: z.string().describe("Subject to publish to"),
@@ -153,7 +153,7 @@ export const registerStreamTools = (
   );
 
   server.tool(
-    "nats_stream_fetch",
+    "stream_fetch",
     "Fetch messages from a JetStream consumer. Returns NatsMessage[] { subject, payload }.",
     {
       stream: z.string().describe("Stream name"),
@@ -184,7 +184,7 @@ export const registerStreamTools = (
   );
 
   server.tool(
-    "nats_stream_consumer_create",
+    "stream_consumer_create",
     "Create a durable consumer on a JetStream stream. Returns ConsumerInfo { name, streamName, numPending, numAckPending }.",
     {
       stream: z.string().describe("Stream name"),

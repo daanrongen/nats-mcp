@@ -11,7 +11,7 @@ export const registerCoreTools = (
   runtime: ManagedRuntime.ManagedRuntime<NatsClient, NatsError>,
 ) => {
   server.tool(
-    "nats_publish",
+    "publish",
     "Publish a message to a NATS subject. Returns void on success.",
     {
       subject: z.string().describe("The NATS subject to publish to"),
@@ -39,7 +39,7 @@ export const registerCoreTools = (
   );
 
   server.tool(
-    "nats_request",
+    "request",
     "Send a request to a NATS subject and await a reply. Returns NatsMessage { subject, payload }.",
     {
       subject: z.string().describe("The NATS subject to send the request to"),
