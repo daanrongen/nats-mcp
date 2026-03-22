@@ -16,7 +16,11 @@
     "typecheck": "tsc -p tsconfig.check.json",
     "test": "bun test",
     "lint": "biome check .",
-    "format": "biome format --write ."
+    "format": "biome format --write .",
+    "release:patch": "npm version patch",
+    "release:minor": "npm version minor",
+    "release:major": "npm version major",
+    "postversion": "git push --follow-tags"
   },
   "license": "MIT",
   "repository": {
