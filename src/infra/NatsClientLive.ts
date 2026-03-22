@@ -2,12 +2,12 @@ import { Effect, Layer } from "effect";
 import {
   AckPolicy,
   DeliverPolicy,
-  ReplayPolicy,
   type JetStreamClient,
   type KV,
   type NatsConnection,
   type ConsumerConfig as NatsConsumerConfig,
   type StreamConfig as NatsStreamConfig,
+  ReplayPolicy,
   StringCodec,
   connect,
 } from "nats";
