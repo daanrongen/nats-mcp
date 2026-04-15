@@ -1,6 +1,6 @@
 {
   "name": "@daanrongen/nats-mcp",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "MCP server for NATS — publish, request-reply, JetStream streams, KV store, and server diagnostics over stdio",
   "type": "module",
   "bin": {
