@@ -1,8 +1,8 @@
 import { describe, expect, it } from "bun:test";
 import { Effect } from "effect";
-import { StreamConfig } from "../../src/domain/models.ts";
-import { NatsClient } from "../../src/domain/NatsClient.ts";
-import { NatsClientTest } from "../../src/infra/NatsClientTest.ts";
+import { NatsClientTest } from "../infra/NatsClientTest.ts";
+import { StreamConfig } from "./models.ts";
+import { NatsClient } from "./NatsClient.ts";
 
 describe("streams", () => {
   it("creates a stream and retrieves it via streamInfo", async () => {
@@ -42,7 +42,7 @@ describe("streams", () => {
         yield* client.streamCreate(new StreamConfig({ name: "EVENTS", subjects: ["events.>"] }));
         yield* client.streamConsumerCreate("EVENTS", {
           name: "my-consumer",
-        } as import("../../src/domain/models.ts").ConsumerConfig);
+        } as import("./models.ts").ConsumerConfig);
         yield* client.streamPublish("events.created", "event-1");
         yield* client.streamPublish("events.updated", "event-2");
         return yield* client.streamFetch("EVENTS", "my-consumer", 10);
@@ -73,7 +73,7 @@ describe("streams", () => {
         return yield* client.streamConsumerCreate("WORK", {
           name: "worker-1",
           filterSubject: "work.tasks",
-        } as import("../../src/domain/models.ts").ConsumerConfig);
+        } as import("./models.ts").ConsumerConfig);
       }).pipe(Effect.provide(NatsClientTest)),
     );
     expect(info.name).toBe("worker-1");

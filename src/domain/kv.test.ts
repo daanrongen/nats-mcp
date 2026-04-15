@@ -1,8 +1,8 @@
 import { describe, expect, it } from "bun:test";
 import { Effect } from "effect";
-import { KvNotFoundError } from "../../src/domain/errors.ts";
-import { NatsClient } from "../../src/domain/NatsClient.ts";
-import { NatsClientTest } from "../../src/infra/NatsClientTest.ts";
+import { NatsClientTest } from "../infra/NatsClientTest.ts";
+import { KvNotFoundError } from "./errors.ts";
+import { NatsClient } from "./NatsClient.ts";
 
 describe("kv", () => {
   it("creates a bucket and lists it", async () => {
