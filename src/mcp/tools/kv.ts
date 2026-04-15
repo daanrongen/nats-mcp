@@ -4,7 +4,7 @@ import { Effect } from "effect";
 import { z } from "zod";
 import type { NatsError } from "../../domain/errors.ts";
 import { NatsClient } from "../../domain/NatsClient.ts";
-import { formatError, formatSuccess } from "../utils.ts";
+import { formatSuccess, runTool } from "../utils.ts";
 
 export const registerKvTools = (
   server: McpServer,
@@ -23,16 +23,15 @@ export const registerKvTools = (
       idempotentHint: true,
       openWorldHint: true,
     },
-    async ({ bucket }) => {
-      const result = await runtime.runPromiseExit(
+    async ({ bucket }) =>
+      runTool(
+        runtime,
         Effect.gen(function* () {
           const client = yield* NatsClient;
           yield* client.kvCreateBucket(bucket);
         }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess({ ok: true });
-    },
+        () => formatSuccess({ ok: true }),
+      ),
   );
 
   server.tool(
@@ -46,16 +45,15 @@ export const registerKvTools = (
       idempotentHint: true,
       openWorldHint: true,
     },
-    async () => {
-      const result = await runtime.runPromiseExit(
+    async () =>
+      runTool(
+        runtime,
         Effect.gen(function* () {
           const client = yield* NatsClient;
           return yield* client.kvListBuckets();
         }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
-    },
+        formatSuccess,
+      ),
   );
 
   server.tool(
@@ -72,16 +70,15 @@ export const registerKvTools = (
       idempotentHint: true,
       openWorldHint: true,
     },
-    async ({ bucket, key }) => {
-      const result = await runtime.runPromiseExit(
+    async ({ bucket, key }) =>
+      runTool(
+        runtime,
         Effect.gen(function* () {
           const client = yield* NatsClient;
           return yield* client.kvGet(bucket, key);
         }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess({ value: result.value });
-    },
+        (value) => formatSuccess({ value }),
+      ),
   );
 
   server.tool(
@@ -99,16 +96,15 @@ export const registerKvTools = (
       idempotentHint: true,
       openWorldHint: true,
     },
-    async ({ bucket, key, value }) => {
-      const result = await runtime.runPromiseExit(
+    async ({ bucket, key, value }) =>
+      runTool(
+        runtime,
         Effect.gen(function* () {
           const client = yield* NatsClient;
           yield* client.kvPut(bucket, key, value);
         }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess({ ok: true });
-    },
+        () => formatSuccess({ ok: true }),
+      ),
   );
 
   server.tool(
@@ -125,16 +121,15 @@ export const registerKvTools = (
       idempotentHint: false,
       openWorldHint: true,
     },
-    async ({ bucket, key }) => {
-      const result = await runtime.runPromiseExit(
+    async ({ bucket, key }) =>
+      runTool(
+        runtime,
         Effect.gen(function* () {
           const client = yield* NatsClient;
           yield* client.kvDelete(bucket, key);
         }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess({ ok: true });
-    },
+        () => formatSuccess({ ok: true }),
+      ),
   );
 
   server.tool(
@@ -150,16 +145,15 @@ export const registerKvTools = (
       idempotentHint: true,
       openWorldHint: true,
     },
-    async ({ bucket }) => {
-      const result = await runtime.runPromiseExit(
+    async ({ bucket }) =>
+      runTool(
+        runtime,
         Effect.gen(function* () {
           const client = yield* NatsClient;
           return yield* client.kvListKeys(bucket);
         }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
-    },
+        formatSuccess,
+      ),
   );
 
   server.tool(
@@ -176,15 +170,14 @@ export const registerKvTools = (
       idempotentHint: true,
       openWorldHint: true,
     },
-    async ({ bucket, key }) => {
-      const result = await runtime.runPromiseExit(
+    async ({ bucket, key }) =>
+      runTool(
+        runtime,
         Effect.gen(function* () {
           const client = yield* NatsClient;
           return yield* client.kvHistory(bucket, key);
         }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
-    },
+        formatSuccess,
+      ),
   );
 };

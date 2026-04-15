@@ -4,7 +4,7 @@ import { Effect } from "effect";
 import { z } from "zod";
 import type { NatsError } from "../../domain/errors.ts";
 import { NatsClient } from "../../domain/NatsClient.ts";
-import { formatError, formatSuccess } from "../utils.ts";
+import { formatSuccess, runTool } from "../utils.ts";
 
 export const registerCoreTools = (
   server: McpServer,
@@ -24,18 +24,15 @@ export const registerCoreTools = (
       idempotentHint: false,
       openWorldHint: true,
     },
-    async ({ subject, payload }) => {
-      const result = await runtime.runPromiseExit(
+    async ({ subject, payload }) =>
+      runTool(
+        runtime,
         Effect.gen(function* () {
           const client = yield* NatsClient;
           yield* client.publish(subject, payload);
         }),
-      );
-      if (result._tag === "Failure") {
-        return formatError(result.cause);
-      }
-      return formatSuccess({ ok: true });
-    },
+        () => formatSuccess({ ok: true }),
+      ),
   );
 
   server.tool(
@@ -53,17 +50,14 @@ export const registerCoreTools = (
       idempotentHint: false,
       openWorldHint: true,
     },
-    async ({ subject, payload, timeoutMs }) => {
-      const result = await runtime.runPromiseExit(
+    async ({ subject, payload, timeoutMs }) =>
+      runTool(
+        runtime,
         Effect.gen(function* () {
           const client = yield* NatsClient;
           return yield* client.request(subject, payload, timeoutMs);
         }),
-      );
-      if (result._tag === "Failure") {
-        return formatError(result.cause);
-      }
-      return formatSuccess(result.value);
-    },
+        formatSuccess,
+      ),
   );
 };

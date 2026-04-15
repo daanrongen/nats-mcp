@@ -3,7 +3,7 @@ import type { ManagedRuntime } from "effect";
 import { Effect } from "effect";
 import type { NatsError } from "../../domain/errors.ts";
 import { NatsClient } from "../../domain/NatsClient.ts";
-import { formatError, formatSuccess } from "../utils.ts";
+import { formatSuccess, runTool } from "../utils.ts";
 
 export const registerServerTools = (
   server: McpServer,
@@ -20,15 +20,14 @@ export const registerServerTools = (
       idempotentHint: true,
       openWorldHint: true,
     },
-    async () => {
-      const result = await runtime.runPromiseExit(
+    async () =>
+      runTool(
+        runtime,
         Effect.gen(function* () {
           const client = yield* NatsClient;
           return yield* client.serverInfo();
         }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
-    },
+        formatSuccess,
+      ),
   );
 };
