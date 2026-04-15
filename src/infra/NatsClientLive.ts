@@ -273,7 +273,7 @@ export const NatsClientLive = Layer.scoped(
         wrapNats("serverInfo", async () => {
           const info = conn.info;
           if (!info) {
-            throw new Error("No server info available");
+            throw new NatsError({ message: "No server info available" });
           }
           return new ServerInfo({
             serverId: info.server_id,
