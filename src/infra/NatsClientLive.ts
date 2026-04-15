@@ -4,10 +4,12 @@ import {
   connect,
   DeliverPolicy,
   type JetStreamClient,
+  type JetStreamManager,
   type KV,
   type NatsConnection,
   type ConsumerConfig as NatsConsumerConfig,
   type StreamConfig as NatsStreamConfig,
+  type StreamInfo as NatsStreamInfo,
   ReplayPolicy,
   StringCodec,
 } from "nats";
@@ -31,6 +33,14 @@ const wrapNats = <A>(label: string, fn: () => Promise<A>): Effect.Effect<A, Nats
     catch: (e) => new NatsError({ message: `${label} failed`, cause: e }),
   });
 
+const toStreamInfo = (s: NatsStreamInfo): StreamInfo =>
+  new StreamInfo({
+    name: s.config.name,
+    subjects: s.config.subjects ?? [],
+    numMessages: s.state.messages,
+    numBytes: s.state.bytes,
+  });
+
 const getKv = (js: JetStreamClient, bucket: string): Effect.Effect<KV, NatsError> =>
   wrapNats(`kvGet bucket=${bucket}`, () => js.views.kv(bucket));
 
@@ -45,6 +55,9 @@ export const NatsClientLive = Layer.scoped(
     );
 
     const js = conn.jetstream();
+    const jsm: JetStreamManager = yield* wrapNats("jetstreamManager", () =>
+      conn.jetstreamManager(),
+    );
 
     return {
       publish: (subject, payload) =>
@@ -65,37 +78,22 @@ export const NatsClientLive = Layer.scoped(
 
       streamList: () =>
         wrapNats("streamList", async () => {
-          const jsm = await conn.jetstreamManager();
           const streams: StreamInfo[] = [];
           const lister = jsm.streams.list();
           for await (const s of lister) {
-            streams.push(
-              new StreamInfo({
-                name: s.config.name,
-                subjects: s.config.subjects ?? [],
-                numMessages: s.state.messages,
-                numBytes: s.state.bytes,
-              }),
-            );
+            streams.push(toStreamInfo(s));
           }
           return streams;
         }),
 
       streamInfo: (name) =>
         wrapNats(`streamInfo name=${name}`, async () => {
-          const jsm = await conn.jetstreamManager();
           const s = await jsm.streams.info(name);
-          return new StreamInfo({
-            name: s.config.name,
-            subjects: s.config.subjects ?? [],
-            numMessages: s.state.messages,
-            numBytes: s.state.bytes,
-          });
+          return toStreamInfo(s);
         }),
 
       streamCreate: (config) =>
         wrapNats(`streamCreate name=${config.name}`, async () => {
-          const jsm = await conn.jetstreamManager();
           const streamCfg: Partial<NatsStreamConfig> = {
             name: config.name,
             subjects: [...config.subjects],
@@ -110,17 +108,11 @@ export const NatsClientLive = Layer.scoped(
             streamCfg.max_age = config.maxAge;
           }
           const s = await jsm.streams.add(streamCfg);
-          return new StreamInfo({
-            name: s.config.name,
-            subjects: s.config.subjects ?? [],
-            numMessages: s.state.messages,
-            numBytes: s.state.bytes,
-          });
+          return toStreamInfo(s);
         }),
 
       streamDelete: (name) =>
         wrapNats(`streamDelete name=${name}`, async () => {
-          const jsm = await conn.jetstreamManager();
           await jsm.streams.delete(name);
         }),
 
@@ -153,8 +145,6 @@ export const NatsClientLive = Layer.scoped(
 
       streamConsumerCreate: (stream, config) =>
         wrapNats(`streamConsumerCreate stream=${stream} name=${config.name}`, async () => {
-          const jsm = await conn.jetstreamManager();
-
           const ackPolicyMap: Record<string, AckPolicy> = {
             none: AckPolicy.None,
             all: AckPolicy.All,
@@ -201,7 +191,6 @@ export const NatsClientLive = Layer.scoped(
 
       kvListBuckets: () =>
         wrapNats("kvListBuckets", async () => {
-          const jsm = await conn.jetstreamManager();
           const buckets: string[] = [];
           const lister = jsm.streams.list();
           for await (const s of lister) {

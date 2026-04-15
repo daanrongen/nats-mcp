@@ -5,7 +5,7 @@ import { z } from "zod";
 import type { NatsError } from "../../domain/errors.ts";
 import { ConsumerConfig, StreamConfig } from "../../domain/models.ts";
 import { NatsClient } from "../../domain/NatsClient.ts";
-import { formatError, formatSuccess } from "../utils.ts";
+import { formatSuccess, runTool } from "../utils.ts";
 
 export const registerStreamTools = (
   server: McpServer,
@@ -22,16 +22,15 @@ export const registerStreamTools = (
       idempotentHint: true,
       openWorldHint: true,
     },
-    async () => {
-      const result = await runtime.runPromiseExit(
+    async () =>
+      runTool(
+        runtime,
         Effect.gen(function* () {
           const client = yield* NatsClient;
           return yield* client.streamList();
         }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
-    },
+        formatSuccess,
+      ),
   );
 
   server.tool(
@@ -47,16 +46,15 @@ export const registerStreamTools = (
       idempotentHint: true,
       openWorldHint: true,
     },
-    async ({ name }) => {
-      const result = await runtime.runPromiseExit(
+    async ({ name }) =>
+      runTool(
+        runtime,
         Effect.gen(function* () {
           const client = yield* NatsClient;
           return yield* client.streamInfo(name);
         }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
-    },
+        formatSuccess,
+      ),
   );
 
   server.tool(
@@ -84,14 +82,14 @@ export const registerStreamTools = (
         ...(maxBytes !== undefined && { maxBytes }),
         ...(maxAge !== undefined && { maxAge }),
       });
-      const result = await runtime.runPromiseExit(
+      return runTool(
+        runtime,
         Effect.gen(function* () {
           const client = yield* NatsClient;
           return yield* client.streamCreate(config);
         }),
+        formatSuccess,
       );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
     },
   );
 
@@ -108,16 +106,15 @@ export const registerStreamTools = (
       idempotentHint: false,
       openWorldHint: true,
     },
-    async ({ name }) => {
-      const result = await runtime.runPromiseExit(
+    async ({ name }) =>
+      runTool(
+        runtime,
         Effect.gen(function* () {
           const client = yield* NatsClient;
           yield* client.streamDelete(name);
         }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess({ ok: true });
-    },
+        () => formatSuccess({ ok: true }),
+      ),
   );
 
   server.tool(
@@ -134,16 +131,15 @@ export const registerStreamTools = (
       idempotentHint: false,
       openWorldHint: true,
     },
-    async ({ subject, payload }) => {
-      const result = await runtime.runPromiseExit(
+    async ({ subject, payload }) =>
+      runTool(
+        runtime,
         Effect.gen(function* () {
           const client = yield* NatsClient;
           return yield* client.streamPublish(subject, payload);
         }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
-    },
+        formatSuccess,
+      ),
   );
 
   server.tool(
@@ -161,16 +157,15 @@ export const registerStreamTools = (
       idempotentHint: false,
       openWorldHint: true,
     },
-    async ({ stream, consumer, count }) => {
-      const result = await runtime.runPromiseExit(
+    async ({ stream, consumer, count }) =>
+      runTool(
+        runtime,
         Effect.gen(function* () {
           const client = yield* NatsClient;
           return yield* client.streamFetch(stream, consumer, count);
         }),
-      );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
-    },
+        formatSuccess,
+      ),
   );
 
   server.tool(
@@ -197,14 +192,14 @@ export const registerStreamTools = (
         ...(deliverPolicy !== undefined && { deliverPolicy }),
         ...(ackPolicy !== undefined && { ackPolicy }),
       });
-      const result = await runtime.runPromiseExit(
+      return runTool(
+        runtime,
         Effect.gen(function* () {
           const client = yield* NatsClient;
           return yield* client.streamConsumerCreate(stream, config);
         }),
+        formatSuccess,
       );
-      if (result._tag === "Failure") return formatError(result.cause);
-      return formatSuccess(result.value);
     },
   );
 };
