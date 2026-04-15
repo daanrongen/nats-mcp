@@ -96,9 +96,9 @@ export const NatsClientLive = Layer.scoped(
       streamCreate: (config) =>
         wrapNats(`streamCreate name=${config.name}`, async () => {
           const jsm = await conn.jetstreamManager();
-          const streamCfg: Partial<NatsStreamConfig> & { name: string } = {
+          const streamCfg: Partial<NatsStreamConfig> = {
             name: config.name,
-            subjects: config.subjects as string[],
+            subjects: [...config.subjects],
           };
           if (config.maxMessages !== undefined) {
             streamCfg.max_msgs = config.maxMessages;
@@ -109,7 +109,7 @@ export const NatsClientLive = Layer.scoped(
           if (config.maxAge !== undefined) {
             streamCfg.max_age = config.maxAge;
           }
-          const s = await jsm.streams.add(streamCfg as NatsStreamConfig);
+          const s = await jsm.streams.add(streamCfg);
           return new StreamInfo({
             name: s.config.name,
             subjects: s.config.subjects ?? [],
