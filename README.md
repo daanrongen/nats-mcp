@@ -5,25 +5,25 @@ MCP server for [NATS](https://nats.io/) — publish messages, request-reply, man
 ## Installation
 
 ```bash
-npx -y @daanrongen/nats-mcp
+bunx @daanrongen/nats-mcp
 ```
 
 ## Tools (17 total)
 
-| Domain      | Tools                                                                                                                   | Coverage                                        |
-| ----------- | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
-| **Core**    | `publish`, `request`                                                                                                    | Publish messages, request-reply pattern         |
+| Domain      | Tools                                                                                                                      | Coverage                                        |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| **Core**    | `publish`, `request`                                                                                                       | Publish messages, request-reply pattern         |
 | **Streams** | `stream_list`, `stream_info`, `stream_create`, `stream_delete`, `stream_publish`, `stream_fetch`, `stream_consumer_create` | JetStream stream lifecycle and message delivery |
-| **KV**      | `kv_create_bucket`, `kv_list_buckets`, `kv_get`, `kv_put`, `kv_delete`, `kv_list_keys`, `kv_history`                  | Key-value store with history                    |
-| **Server**  | `server_info`                                                                                                           | NATS server diagnostics                         |
+| **KV**      | `kv_create_bucket`, `kv_list_buckets`, `kv_get`, `kv_put`, `kv_delete`, `kv_list_keys`, `kv_history`                     | Key-value store with history                    |
+| **Server**  | `server_info`                                                                                                              | NATS server diagnostics                         |
+
+## Configuration
+
+| Variable   | Required | Description                                    |
+| ---------- | -------- | ---------------------------------------------- |
+| `NATS_URL` | Yes      | NATS server URL (e.g. `nats://localhost:4222`) |
 
 ## Setup
-
-### Environment variables
-
-| Variable   | Required | Description                              |
-| ---------- | -------- | ---------------------------------------- |
-| `NATS_URL` | Yes      | NATS server URL (e.g. `nats://localhost:4222`) |
 
 ### Claude Desktop
 
@@ -34,8 +34,8 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
   "mcpServers": {
     "nats": {
       "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "@daanrongen/nats-mcp"],
+      "command": "bunx",
+      "args": ["@daanrongen/nats-mcp"],
       "env": {
         "NATS_URL": "nats://localhost:4222"
       }
@@ -44,10 +44,10 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
 }
 ```
 
-Or via the CLI:
+### Claude Code CLI
 
 ```bash
-claude mcp add nats -e NATS_URL=nats://localhost:4222 -- npx -y @daanrongen/nats-mcp
+claude mcp add nats -e NATS_URL=nats://localhost:4222 -- bunx @daanrongen/nats-mcp
 ```
 
 ## Development
@@ -56,6 +56,8 @@ claude mcp add nats -e NATS_URL=nats://localhost:4222 -- npx -y @daanrongen/nats
 bun install
 bun run dev        # run with --watch
 bun test           # run test suite
+bun run lint       # lint and check formatting
+bun run typecheck  # type check
 bun run build      # bundle to dist/main.js
 bun run inspect    # open MCP Inspector in browser
 ```
@@ -88,3 +90,7 @@ src/
     ├── utils.ts           # formatSuccess, formatError
     └── tools/             # core.ts, streams.ts, kv.ts, server.ts
 ```
+
+## License
+
+MIT

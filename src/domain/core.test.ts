@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { Effect } from "effect";
-import { NatsClient } from "../../src/domain/NatsClient.ts";
-import { NatsClientTest } from "../../src/infra/NatsClientTest.ts";
+import { NatsClientTest } from "../infra/NatsClientTest.ts";
+import { NatsClient } from "./NatsClient.ts";
 
 describe("core", () => {
   it("publish completes without error", async () => {
