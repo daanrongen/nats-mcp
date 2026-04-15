@@ -3,7 +3,7 @@ import type { ManagedRuntime } from "effect";
 import { Effect } from "effect";
 import { z } from "zod";
 import type { NatsError } from "../../domain/errors.ts";
-import { StreamConfig } from "../../domain/models.ts";
+import { ConsumerConfig, StreamConfig } from "../../domain/models.ts";
 import { NatsClient } from "../../domain/NatsClient.ts";
 import { formatError, formatSuccess } from "../utils.ts";
 
@@ -191,15 +191,16 @@ export const registerStreamTools = (
       openWorldHint: true,
     },
     async ({ stream, name, filterSubject, deliverPolicy, ackPolicy }) => {
+      const config = new ConsumerConfig({
+        name,
+        ...(filterSubject !== undefined && { filterSubject }),
+        ...(deliverPolicy !== undefined && { deliverPolicy }),
+        ...(ackPolicy !== undefined && { ackPolicy }),
+      });
       const result = await runtime.runPromiseExit(
         Effect.gen(function* () {
           const client = yield* NatsClient;
-          return yield* client.streamConsumerCreate(stream, {
-            name,
-            ...(filterSubject !== undefined && { filterSubject }),
-            ...(deliverPolicy !== undefined && { deliverPolicy }),
-            ...(ackPolicy !== undefined && { ackPolicy }),
-          } as import("../../domain/models.ts").ConsumerConfig);
+          return yield* client.streamConsumerCreate(stream, config);
         }),
       );
       if (result._tag === "Failure") return formatError(result.cause);
