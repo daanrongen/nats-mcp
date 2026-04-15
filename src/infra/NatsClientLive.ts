@@ -154,11 +154,32 @@ export const NatsClientLive = Layer.scoped(
       streamConsumerCreate: (stream, config) =>
         wrapNats(`streamConsumerCreate stream=${stream} name=${config.name}`, async () => {
           const jsm = await conn.jetstreamManager();
+
+          const ackPolicyMap: Record<string, AckPolicy> = {
+            none: AckPolicy.None,
+            all: AckPolicy.All,
+            explicit: AckPolicy.Explicit,
+          };
+          const deliverPolicyMap: Record<string, DeliverPolicy> = {
+            all: DeliverPolicy.All,
+            last: DeliverPolicy.Last,
+            new: DeliverPolicy.New,
+            by_start_sequence: DeliverPolicy.StartSequence,
+            by_start_time: DeliverPolicy.StartTime,
+            last_per_subject: DeliverPolicy.LastPerSubject,
+          };
+
           const consumerCfg: NatsConsumerConfig = {
             name: config.name,
             durable_name: config.name,
-            ack_policy: AckPolicy.Explicit,
-            deliver_policy: DeliverPolicy.All,
+            ack_policy:
+              config.ackPolicy !== undefined
+                ? (ackPolicyMap[config.ackPolicy] ?? AckPolicy.Explicit)
+                : AckPolicy.Explicit,
+            deliver_policy:
+              config.deliverPolicy !== undefined
+                ? (deliverPolicyMap[config.deliverPolicy] ?? DeliverPolicy.All)
+                : DeliverPolicy.All,
             replay_policy: ReplayPolicy.Instant,
           };
           if (config.filterSubject !== undefined) {
